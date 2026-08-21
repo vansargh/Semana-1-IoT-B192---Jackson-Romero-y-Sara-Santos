@@ -8,5 +8,5 @@
 
 ## Enlaces Rápidos y Entregables
 * **Video de demostración/explicación:** [Ver Video en YouTube](https://youtu.be/5bJjnoIXeZs)
-* **Informe en PDF:** [Ver Informe de la Entrega](docs/InformeTecnico_Romero&Santos.pdf)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/InformeTecnico_Romero&Santos.docx)
 * **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana 1 Romero Jackson-Santos Sara.pkt>)
