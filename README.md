@@ -1,12 +1,14 @@
-# Semana-1-IoT-B192---Jackson-Romero-y-Sara-Santos
+# 🌐 Redes e Internet de las Cosas (IoT) - Trabajos Prácticos
 
 **Integrantes del equipo:**
-- Jackson Steeven Romero Gonzalez.
-- Sara Lucía Santos Medina.
+* **Jackson Steeven Romero González**
+* **Sara Lucía Santos Medina**
 
 ---
 
-## Enlaces Rápidos y Entregables
-* **Video de demostración/explicación:** [Ver Video en YouTube](https://youtu.be/5bJjnoIXeZs)
+### 🔹 Semana 1: Sistema de Monitoreo Ambiental en Tiempo Real
+* **Video explicativo:** [Ver Video en YouTube](https://youtu.be/5bJjnoIXeZs)
 * **Informe en Word:** [Ver Informe de la Entrega](docs/InformeTecnico_Romero&Santos.docx)
 * **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana 1 Romero Jackson-Santos Sara.pkt>)
+
+---
