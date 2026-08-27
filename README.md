@@ -8,8 +8,8 @@
 
 ### 🔹 Semana 1: Sistema de Monitoreo Ambiental en Tiempo Real
 * **Video explicativo:** [Ver Video en YouTube](https://youtu.be/5bJjnoIXeZs)
-* **Informe en Word:** [Ver Informe de la Entrega](docs/InformeTecnico_Romero&Santos.docx)
-* **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana 1 Romero Jackson-Santos Sara.pkt>)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Uno_Informe_Romero_Santos.docx)
+* **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana_Uno_PKT_Romero_Santos.pkt>)
 
 ---
 
