@@ -16,6 +16,6 @@
 ### 🔹 Semana 2: Construccion de una Red IoT Funcional
 * **Video explicativo:** [Ver Video en YouTube]()
 * **Informe en Word:** [Ver Informe de la Entrega]()
-* **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana 1 Romero Jackson-Santos Sara.pkt>)
+* **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana_Dos_PKT_Romero_Santos.pkt>)
 
 ---
