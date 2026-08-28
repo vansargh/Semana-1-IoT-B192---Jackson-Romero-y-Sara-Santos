@@ -14,8 +14,8 @@
 ---
 
 ### 🔹 Semana 2: Construccion de una Red IoT Funcional
-* **Video explicativo:** [Ver Video en YouTube]()
-* **Informe en Word:** [Ver Informe de la Entrega]()
+* **Video explicativo:** [Ver Video en YouTube](https://www.youtube.com/watch?v=UnRbWiecaJg)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Dos_Informe_Romero_Santos.docx)
 * **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana_Dos_PKT_Romero_Santos.pkt>)
 
 ---
