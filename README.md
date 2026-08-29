@@ -19,3 +19,8 @@
 * **Archivo Packet Tracer:** [Descargar .pkt](<pkt/Semana_Dos_PKT_Romero_Santos.pkt>)
 
 ---
+
+### 🔹 Semana 3: Actividad Proyecto
+* **Informe en Word:** [Ver Informe de la Entrega]()
+
+---
