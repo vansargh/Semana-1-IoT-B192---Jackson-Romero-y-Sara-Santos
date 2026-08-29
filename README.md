@@ -21,6 +21,6 @@
 ---
 
 ### 🔹 Semana 3: Actividad Proyecto
-* **Informe en Word:** [Ver Informe de la Entrega]()
+* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Tres_Informe_Romero_Santos.docx)
 
 ---
