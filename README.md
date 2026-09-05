@@ -26,7 +26,7 @@
 ---
 
 ### 🔹 Semana 4: Introducción a la Electrónica para el Proyecto IoT
-* **Video explicativo:** [Ver Video en YouTube]()
+* **Playlist de videos explicativos:** [Ver Playlist en YouTube](https://youtube.com/playlist?list=PLDD2XDGlsCjg&si=nNF1hwgs6M1XqcAf)
 * **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Cuatro_Informe_Romero_Santos.docx)
 * **Link a Tinkercad:** [Ir a Tinkercad](<https://www.tinkercad.com/things/fQSd9LcA8B6-act-iot-s4?sharecode=E8XbMvwR3prY-awZJwI-Pal6Buf7RbovogMMnvTr2G8>)
 
