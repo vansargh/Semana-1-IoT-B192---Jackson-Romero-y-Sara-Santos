@@ -31,3 +31,9 @@
 * **Link a Tinkercad:** [Ir a Tinkercad](<https://www.tinkercad.com/things/fQSd9LcA8B6-act-iot-s4?sharecode=E8XbMvwR3prY-awZJwI-Pal6Buf7RbovogMMnvTr2G8>)
 
 ---
+
+### 🔹 Semana 5: Introducción a la Electrónica para el Proyecto IoT (Montajes Físicos)
+* **Playlist de videos explicativos:** [Ver Playlist en YouTube](https://youtube.com/playlist?list=PLZgjHWV6KHLw&si=VQw3HlyDDr52z1ki)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Cinco_Informe_Romero_Santos.docx)
+
+---
