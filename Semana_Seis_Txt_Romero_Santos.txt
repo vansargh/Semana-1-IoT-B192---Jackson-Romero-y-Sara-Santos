@@ -1,0 +1,88 @@
+#include "DHT.h"
+
+// --- Configuración DHT11 ---
+#define DHTPIN 4
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// --- Configuración LDR ---
+const int ldrPin = 15;
+
+// --- Configuración HC-SR04 ---
+const int trigPin = 5;
+const int echoPin = 18;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Inicializamos DHT11
+  dht.begin();
+  
+  // Inicializamos pines del HC-SR04
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  
+  Serial.println(F("Iniciando Sistema de Monitoreo de Aula..."));
+  Serial.println();
+}
+
+void loop() {
+  // El DHT11 es el sensor que dicta el ritmo, necesita 2 segundos entre lecturas
+  delay(2000);
+
+  // --- 1. Lectura del DHT11 ---
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  
+  // Manejo básico de error para que no se congele el monitor
+  if (isnan(h) || isnan(t)) {
+    h = 0.0;
+    t = 0.0;
+  }
+
+  // --- 2. Lectura del LDR ---
+  int valorLuz = analogRead(ldrPin);
+
+  // --- 3. Lectura del HC-SR04 ---
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  long duracion = pulseIn(echoPin, HIGH);
+  float distanciaCm = duracion * 0.034 / 2;
+
+  // --- 4. Lógica de Estado de Ocupación ---
+  // Si la distancia es menor a 30 cm, consideramos que hay una persona.
+  String estadoAula;
+  if (distanciaCm > 0 && distanciaCm < 30.0) {
+    estadoAula = "Ocupado (distancia < 30 cm)";
+  } else {
+    estadoAula = "Desocupado";
+  }
+
+  // --- 5. Mostrar datos con el formato requerido ---
+  Serial.println(F("=== MONITOREO AULA ==="));
+  
+  Serial.print(F("Temperatura: "));
+  Serial.print(t, 1);
+  Serial.println(F(" °C"));
+  
+  Serial.print(F("Humedad: "));
+  Serial.print(h, 1);
+  Serial.println(F(" %"));
+  
+  Serial.print(F("Luz: "));
+  Serial.println(valorLuz);
+  
+  Serial.print(F("Distancia: "));
+  Serial.print(distanciaCm, 1);
+  Serial.println(F(" cm"));
+  
+  Serial.print(F("Estado: "));
+  Serial.println(estadoAula);
+  
+  // Salto de línea extra para separar bloques de lectura
+  Serial.println(); 
+}
