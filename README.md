@@ -37,3 +37,10 @@
 * **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Cinco_Informe_Romero_Santos.docx)
 
 ---
+
+### 🔹 Semana 6: Adquisición de Datos Ambientales con ESP32 (Parcial Práctico)
+* **Video Explicativo:** [Ver Video en YouTube](https://www.youtube.com/watch?v=FnJ7IfhxZe8)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Seis_Informe_Romero_Santos.docx)
+* **Código Documentado en txt:** [Ver el Código en Formato txt](txt/Semana_Seis_Txt_Romero_Santos.docx)
+
+---
