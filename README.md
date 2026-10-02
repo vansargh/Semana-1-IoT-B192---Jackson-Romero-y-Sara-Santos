@@ -44,3 +44,8 @@
 * **Código Documentado en txt:** [Ver el Código en Formato txt](txt/Semana_Seis_Txt_Romero_Santos.txt)
 
 ---
+
+### 🔹 Semana 8: Sistema de Ventilación Inteligente
+* **Código Documentado en txt:** [Ver el Código en Formato txt](txt/Semana_Ocho_Txt_Romero_Santos.txt)
+  
+---
