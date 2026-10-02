@@ -1,0 +1,146 @@
+#include "DHT.h"
+
+// ==========================================
+// 1. DEFINICIÓN DE PINES
+// ==========================================
+#define DHTPIN 4        
+#define DHTTYPE DHT11   
+
+#define LDR_PIN 34      
+#define LED_AMARILLO 5  
+#define LED_ROJO 18     
+#define LED_VERDE 19    
+#define LED_BLANCO 22   
+#define BUZZER_PIN 23   
+
+DHT dht(DHTPIN, DHTTYPE);
+
+// ==========================================
+// VARIABLES PARA EL CRONÓMETRO (millis)
+// ==========================================
+unsigned long tiempoAnteriorDHT = 0;
+unsigned long tiempoAnteriorAmarillo = 0;
+unsigned long tiempoAnteriorBuzzer = 0;
+
+bool estadoAmarillo = LOW;
+bool estadoBuzzer = LOW;
+
+// Variable para controlar la histéresis de temperatura
+bool ventilacionActiva = false; 
+
+// Variables para almacenar lecturas
+float humedad = 0.0;
+float temperatura = 0.0;
+int valorLuminosidad = 0;
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  
+  // Configuración de pines de salida[cite: 3]
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARILLO, OUTPUT);
+  pinMode(LED_BLANCO, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // Apagar todo al inicio
+  digitalWrite(LED_ROJO, LOW);
+  digitalWrite(LED_VERDE, LOW);
+  digitalWrite(LED_AMARILLO, LOW);
+  digitalWrite(LED_BLANCO, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+  
+  Serial.println("Sistema Iniciado (Modo LED). Temporizadores e Histéresis activos.");
+}
+
+void loop() {
+  unsigned long tiempoActual = millis(); // Captura el tiempo actual en milisegundos
+
+  // ==========================================
+  // 2. LECTURA DE SENSORES (CADA 2 SEGUNDOS)[cite: 2]
+  // ==========================================
+  if (tiempoActual - tiempoAnteriorDHT >= 2000) {
+    tiempoAnteriorDHT = tiempoActual; // Reinicia el cronómetro del DHT
+
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+    
+    // Validar lectura correcta[cite: 3]
+    if (!isnan(h) && !isnan(t)) {
+      humedad = h;
+      temperatura = t;
+      valorLuminosidad = analogRead(LDR_PIN);
+
+      Serial.print("Temp: "); Serial.print(temperatura);
+      Serial.print(" °C | Hum: "); Serial.print(humedad);
+      Serial.print(" % | Luz: "); Serial.println(valorLuminosidad);
+    } else {
+      Serial.println("Error: ¡Fallo al leer el sensor DHT11!");
+    }
+  }
+
+  // ==========================================
+  // 3. LÓGICA DE CONTROL CONDICIONAL[cite: 1, 3]
+  // ==========================================
+
+  // --- LÓGICA DE TEMPERATURA (CON HISTÉRESIS) ---
+  // Enciende el sistema a los >28°C y lo apaga solo al bajar a <=26°C[cite: 3]
+  if (temperatura > 28.0) {
+    ventilacionActiva = true;
+  } else if (temperatura <= 26.0) {
+    ventilacionActiva = false;
+  }
+
+  // Reflejar la histéresis en el LED Rojo[cite: 1]
+  if (ventilacionActiva) {
+    digitalWrite(LED_ROJO, HIGH); // Simula el ventilador encendido
+  } else {
+    digitalWrite(LED_ROJO, LOW);  // Simula el ventilador apagado
+  }
+
+  // --- LÓGICA DE ESTADO NORMAL (LED VERDE) ---
+  // Ahora el verde enciende si la ventilación NO está activa y la humedad está en rango normal
+  if (!ventilacionActiva && humedad >= 40.0 && humedad <= 75.0) {
+    digitalWrite(LED_VERDE, HIGH);
+  } else {
+    digitalWrite(LED_VERDE, LOW);
+  }
+
+  // --- LÓGICA DE LUMINOSIDAD ---
+  if (valorLuminosidad < 1000) { 
+    digitalWrite(LED_BLANCO, HIGH);
+  } else {
+    digitalWrite(LED_BLANCO, LOW);
+  }
+
+  // --- LÓGICA DEL LED AMARILLO (HUMEDAD) ---
+  if (humedad > 75.0) {
+    // Parpadeo cada 300ms (sin usar delay)
+    if (tiempoActual - tiempoAnteriorAmarillo >= 300) {
+      tiempoAnteriorAmarillo = tiempoActual;
+      estadoAmarillo = !estadoAmarillo; 
+      digitalWrite(LED_AMARILLO, estadoAmarillo);
+    }
+  } else if (humedad < 40.0) {
+    // Si la humedad es baja (< 40%), se queda encendido fijo[cite: 1]
+    digitalWrite(LED_AMARILLO, HIGH);
+  } else {
+    digitalWrite(LED_AMARILLO, LOW);
+  }
+
+  // --- LÓGICA DEL BUZZER (TEMPERATURA Y HUMEDAD) ---
+  if (temperatura > 32.0) {
+    // Alarma crítica: Parpadeo sonoro cada 200ms
+    if (tiempoActual - tiempoAnteriorBuzzer >= 200) {
+      tiempoAnteriorBuzzer = tiempoActual;
+      estadoBuzzer = !estadoBuzzer;
+      digitalWrite(BUZZER_PIN, estadoBuzzer);
+    }
+  } else if (temperatura > 28.0 || humedad < 40.0) {
+    // Alarma normal: Sonido continuo[cite: 1]
+    digitalWrite(BUZZER_PIN, HIGH);
+  } else {
+    digitalWrite(BUZZER_PIN, LOW);
+  }
+}
