@@ -1,0 +1,560 @@
+/*
+ * PROYECTO INTEGRADOR - Sistema IoT de Monitoreo Ambiental para Aulas (ESP32)
+ *
+ * Variables medidas:
+ *   - Temperatura y humedad ........ DHT11   (GPIO 4)
+ *   - Luminosidad .................. LDR     (GPIO 34, ADC1)
+ *   - Calidad de aire (gas/humo) ... MQ-2    (GPIO 35, ADC1, con divisor de voltaje)
+ * Actuadores:
+ *   - LED amarillo (5), LED rojo (18), LED verde (19), LED blanco (22), buzzer (23)
+ *
+ * Nube / red:
+ *   - HiveMQ publico (broker.hivemq.com:1883): laboratorio Semana 10, topicos aula/uts/GRUPO/...
+ *   - Adafruit IO (io.adafruit.com:8883, TLS): alimenta el dashboard en tiempo real
+ *
+ * Librerias (Administrar bibliotecas):
+ *   - PubSubClient (Nick O'Leary)
+ *   - DHT sensor library (Adafruit) + Adafruit Unified Sensor
+ */
+
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include "DHT.h"
+
+// ==========================================
+// 1. CONFIGURACION (CAMBIA SOLO ESTO)
+// ==========================================
+#define GRUPO "grupoROMERO-SANTOS"
+
+const char* ssid     = "Jck";    // red de 2.4 GHz
+const char* password = "wasd4444";
+
+// --- Broker publico HiveMQ (Semana 10) ---
+const char* mqtt_server = "broker.hivemq.com";
+const int   mqtt_port   = 1883;      // sin usuario ni contrasena
+
+// --- Adafruit IO (dashboard) ---
+const bool  USAR_ADAFRUIT_IO = true;
+const char* aio_server = "io.adafruit.com";
+const int   aio_port   = 8883;                 // TLS
+const char* AIO_USER   = "TU_USUARIO_AIO";     // tu usuario de Adafruit IO
+const char* AIO_KEY    = "TU_AIO_KEY";         // tu AIO Key (es secreta)
+
+// Topicos HiveMQ: aula / uts / grupo / variable
+const char* topic_temp     = "aula/uts/" GRUPO "/temperatura";
+const char* topic_hum      = "aula/uts/" GRUPO "/humedad";
+const char* topic_luz      = "aula/uts/" GRUPO "/luminosidad";
+const char* topic_aire     = "aula/uts/" GRUPO "/calidad_aire";
+const char* topic_alerta   = "aula/uts/" GRUPO "/alerta";
+const char* topic_led_rojo = "aula/uts/" GRUPO "/actuadores/led_rojo";
+const char* topic_buzzer   = "aula/uts/" GRUPO "/actuadores/buzzer";
+const char* topic_estado   = "aula/uts/" GRUPO "/estado";
+
+// Topicos Adafruit IO: USUARIO/feeds/clave-del-feed (se construyen en setup)
+char aio_topic_temp[80], aio_topic_hum[80], aio_topic_luz[80];
+char aio_topic_aire[80], aio_topic_alerta[80];
+
+// ==========================================
+// 2. PINES
+// ==========================================
+#define DHTPIN       4
+#define DHTTYPE      DHT11
+#define LDR_PIN      34   // ADC1, solo entrada (compatible con WiFi)
+#define MQ2_PIN      35   // ADC1, solo entrada (compatible con WiFi)
+#define LED_AMARILLO 5
+#define LED_ROJO     18
+#define LED_VERDE    19
+#define LED_BLANCO   22
+#define BUZZER_PIN   23
+
+DHT dht(DHTPIN, DHTTYPE);
+
+WiFiClient       espClient;      // HiveMQ (sin cifrar, como en la Semana 10)
+PubSubClient     client(espClient);
+
+WiFiClientSecure espClientIO;    // Adafruit IO (cifrado TLS)
+PubSubClient     clientIO(espClientIO);
+
+String clientId;
+String clientIdIO;
+
+// ==========================================
+// 3. VARIABLES
+// ==========================================
+// --- Temporizadores (millis) ---
+unsigned long tiempoAnteriorDHT      = 0;
+unsigned long tiempoAnteriorAmarillo = 0;
+unsigned long tiempoAnteriorBuzzer   = 0;
+unsigned long tiempoAnteriorWiFi     = 0;
+unsigned long tiempoAnteriorMQTT     = 0;
+unsigned long tiempoAnteriorAIO      = 0;
+unsigned long ultimoEnvio            = 0;
+unsigned long ultimoEnvioAIO         = 0;
+const unsigned long INTERVALO_ENVIO     = 5000;    // HiveMQ: cada 5 s
+const unsigned long INTERVALO_ENVIO_AIO = 15000;   // Adafruit IO: cada 15 s (plan gratis = 30 datos/min)
+
+// --- Sensores ---
+float humedad          = 0.0;
+float temperatura      = 0.0;
+int   valorLuminosidad = 0;
+bool  datosValidos     = false;   // true cuando ya hubo una lectura correcta del DHT11
+
+// --- MQ-2 (calidad de aire) ---
+// El MQ-2 necesita precalentarse. Durante ese tiempo no se publican ni se evaluan lecturas.
+// Al final del precalentamiento se promedia el aire "limpio" como linea base.
+const unsigned long MQ2_PRECALENTAMIENTO = 120000UL;   // 2 minutos
+const unsigned long MQ2_CALIBRACION      = 10000UL;    // ultimos 10 s -> linea base
+const int AIRE_DELTA_REGULAR = 300;   // base + 300 -> aire "regular"
+const int AIRE_DELTA_MALA    = 700;   // base + 700 -> aire "malo" (alerta)  [AJUSTAR con tus pruebas]
+int   mq2Valor        = 0;
+long  mq2SumaBase     = 0;
+int   mq2MuestrasBase = 0;
+int   mq2Base         = 0;
+bool  mq2Listo        = false;
+bool  aireMala        = false;
+int   estadoAire      = 0;          // 0 calentando, 1 buena, 2 regular, 3 mala
+const char* textoAire[] = {"calentando", "buena", "regular", "mala"};
+
+// --- Actuadores / alertas ---
+bool estadoAmarillo    = LOW;
+bool estadoBuzzer      = LOW;
+bool ventTemp          = false;   // ventilacion por temperatura (histeresis)
+bool ventilacionActiva = false;   // temperatura alta O aire malo
+bool alarmaActiva      = false;   // estado logico del buzzer
+
+int ultimoLedRojo   = -1;         // ultimo estado publicado (-1 = aun no)
+int ultimoBuzzerPub = -1;
+
+int alertaActual     = 0;
+int alertaPubHive    = -1;
+int alertaPubAIO     = -1;
+const char* mensajesAlerta[] = {
+  "OK",
+  "Aire regular",
+  "Humedad fuera de rango",
+  "Temperatura alta",
+  "Aire malo: ventilar",
+  "Temperatura critica"
+};
+
+// ==========================================
+// 4. UTILIDADES
+// ==========================================
+int leerPromedio(int pin, int muestras) {
+  long suma = 0;
+  for (int i = 0; i < muestras; i++) {
+    suma += analogRead(pin);
+    delayMicroseconds(200);
+  }
+  return (int)(suma / muestras);
+}
+
+// Prioridad: temperatura critica > aire malo > temperatura alta > humedad > aire regular
+int calcularAlerta() {
+  if (temperatura > 32.0) return 5;
+  if (aireMala)           return 4;
+  if (temperatura > 28.0) return 3;
+  if (humedad > 75.0 || humedad < 40.0) return 2;
+  if (estadoAire == 2)    return 1;
+  return 0;
+}
+
+// ==========================================
+// 5. WIFI
+// ==========================================
+void conectarWiFi() {
+  Serial.println("\n=== Conexion WiFi ESP32 ===");
+  Serial.print("Conectando a: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  unsigned long inicio = millis();
+  while (WiFi.status() != WL_CONNECTED && (millis() - inicio) < 20000) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n[OK] WiFi conectado");
+    Serial.print("Direccion IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("RSSI: ");
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
+  } else {
+    Serial.println("\n[ERROR] No se pudo conectar");
+    Serial.print("Estado: ");
+    Serial.println(WiFi.status());
+  }
+}
+
+// ==========================================
+// 6. MQTT - HiveMQ
+// ==========================================
+// Intento unico (se llama cada 5 s desde loop())
+void reconectarMQTT() {
+  Serial.print("[MQTT] Conectando a ");
+  Serial.print(mqtt_server);
+  Serial.print("... ");
+
+  // Last Will: si el ESP32 se cae, el broker publica "offline" en /estado
+  if (client.connect(clientId.c_str(), NULL, NULL, topic_estado, 1, true, "offline")) {
+    Serial.println("OK");
+    client.publish(topic_estado, "online", true);   // retenido
+
+    // Forzar republicar actuadores y alerta tras reconectar
+    ultimoLedRojo   = -1;
+    ultimoBuzzerPub = -1;
+    alertaPubHive   = -1;
+  } else {
+    Serial.print("Fallo, rc=");
+    Serial.println(client.state());
+  }
+}
+
+void publicarDatos() {
+  char buf[16];
+
+  dtostrf(temperatura, 1, 1, buf);
+  client.publish(topic_temp, buf);
+
+  dtostrf(humedad, 1, 1, buf);
+  client.publish(topic_hum, buf);
+
+  snprintf(buf, sizeof(buf), "%d", valorLuminosidad);
+  client.publish(topic_luz, buf);
+
+  if (mq2Listo) {
+    snprintf(buf, sizeof(buf), "%d", mq2Valor);
+    client.publish(topic_aire, buf);
+  }
+
+  Serial.println("--- Datos publicados (HiveMQ) ---");
+  Serial.print("[MQTT] "); Serial.print(topic_temp); Serial.print(" -> "); Serial.println(temperatura, 1);
+  Serial.print("[MQTT] "); Serial.print(topic_hum);  Serial.print(" -> "); Serial.println(humedad, 1);
+  Serial.print("[MQTT] "); Serial.print(topic_luz);  Serial.print(" -> "); Serial.println(valorLuminosidad);
+  if (mq2Listo) {
+    Serial.print("[MQTT] "); Serial.print(topic_aire); Serial.print(" -> "); Serial.println(mq2Valor);
+  }
+}
+
+// Publica el estado de los actuadores solo cuando cambia
+void publicarActuadores() {
+  int rojo = ventilacionActiva ? 1 : 0;
+  int bz   = alarmaActiva ? 1 : 0;
+
+  if (rojo != ultimoLedRojo) {
+    client.publish(topic_led_rojo, rojo ? "ON" : "OFF", true);
+    ultimoLedRojo = rojo;
+    Serial.print("[MQTT] "); Serial.print(topic_led_rojo);
+    Serial.print(" -> "); Serial.println(rojo ? "ON" : "OFF");
+  }
+
+  if (bz != ultimoBuzzerPub) {
+    client.publish(topic_buzzer, bz ? "ON" : "OFF", true);
+    ultimoBuzzerPub = bz;
+    Serial.print("[MQTT] "); Serial.print(topic_buzzer);
+    Serial.print(" -> "); Serial.println(bz ? "ON" : "OFF");
+  }
+}
+
+// ==========================================
+// 7. MQTT - Adafruit IO (dashboard)
+// ==========================================
+void construirTopicsAIO() {
+  snprintf(aio_topic_temp,   sizeof(aio_topic_temp),   "%s/feeds/temperatura",  AIO_USER);
+  snprintf(aio_topic_hum,    sizeof(aio_topic_hum),    "%s/feeds/humedad",      AIO_USER);
+  snprintf(aio_topic_luz,    sizeof(aio_topic_luz),    "%s/feeds/luminosidad",  AIO_USER);
+  snprintf(aio_topic_aire,   sizeof(aio_topic_aire),   "%s/feeds/calidad-aire", AIO_USER);
+  snprintf(aio_topic_alerta, sizeof(aio_topic_alerta), "%s/feeds/alerta",       AIO_USER);
+}
+
+void reconectarAIO() {
+  Serial.print("[AIO] Conectando a ");
+  Serial.print(aio_server);
+  Serial.print("... ");
+
+  if (clientIO.connect(clientIdIO.c_str(), AIO_USER, AIO_KEY)) {
+    Serial.println("OK");
+    alertaPubAIO = -1;   // republicar la alerta actual
+  } else {
+    Serial.print("Fallo, rc=");   // 4 = usuario/clave incorrectos, 5 = no autorizado
+    Serial.println(clientIO.state());
+  }
+}
+
+void publicarAIO() {
+  char buf[16];
+
+  dtostrf(temperatura, 1, 1, buf);
+  clientIO.publish(aio_topic_temp, buf);
+
+  dtostrf(humedad, 1, 1, buf);
+  clientIO.publish(aio_topic_hum, buf);
+
+  snprintf(buf, sizeof(buf), "%d", valorLuminosidad);
+  clientIO.publish(aio_topic_luz, buf);
+
+  if (mq2Listo) {
+    snprintf(buf, sizeof(buf), "%d", mq2Valor);
+    clientIO.publish(aio_topic_aire, buf);
+  }
+
+  Serial.println("--- Datos enviados a Adafruit IO ---");
+}
+
+// Alerta (texto) por ambos brokers, solo cuando cambia
+void publicarAlerta() {
+  int a = alertaActual;
+
+  if (client.connected() && a != alertaPubHive) {
+    client.publish(topic_alerta, mensajesAlerta[a], true);
+    alertaPubHive = a;
+    Serial.print("[MQTT] "); Serial.print(topic_alerta);
+    Serial.print(" -> "); Serial.println(mensajesAlerta[a]);
+  }
+
+  if (USAR_ADAFRUIT_IO && clientIO.connected() && a != alertaPubAIO) {
+    clientIO.publish(aio_topic_alerta, mensajesAlerta[a]);
+    alertaPubAIO = a;
+    Serial.print("[AIO] alerta -> "); Serial.println(mensajesAlerta[a]);
+  }
+}
+
+// ==========================================
+// 8. LECTURA DE SENSORES
+// ==========================================
+void leerSensores() {
+  unsigned long ahora = millis();
+
+  // --- DHT11 ---
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  if (!isnan(h) && !isnan(t)) {
+    humedad = h;
+    temperatura = t;
+    datosValidos = true;
+  } else {
+    Serial.println("Error: Fallo al leer el sensor DHT11!");
+  }
+
+  // --- LDR y MQ-2 (promedio de 10 lecturas) ---
+  valorLuminosidad = leerPromedio(LDR_PIN, 10);
+  mq2Valor         = leerPromedio(MQ2_PIN, 10);
+
+  // --- MQ-2: precalentamiento, linea base y estado ---
+  if (!mq2Listo) {
+    if (ahora >= MQ2_PRECALENTAMIENTO - MQ2_CALIBRACION) {
+      mq2SumaBase += mq2Valor;
+      mq2MuestrasBase++;
+    }
+    if (ahora >= MQ2_PRECALENTAMIENTO && mq2MuestrasBase > 0) {
+      mq2Base  = (int)(mq2SumaBase / mq2MuestrasBase);
+      mq2Listo = true;
+      Serial.print("[MQ-2] Listo. Linea base de aire limpio = ");
+      Serial.println(mq2Base);
+    }
+    estadoAire = 0;
+  } else {
+    int delta = mq2Valor - mq2Base;
+    if (delta >= AIRE_DELTA_MALA) {
+      aireMala = true;
+    } else if (delta <= AIRE_DELTA_REGULAR) {
+      aireMala = false;           // histeresis
+    }
+    if (aireMala)                          estadoAire = 3;
+    else if (delta >= AIRE_DELTA_REGULAR)  estadoAire = 2;
+    else                                   estadoAire = 1;
+  }
+
+  // --- Monitor serial ---
+  Serial.print("Temp: "); Serial.print(temperatura, 1);
+  Serial.print(" C | Hum: "); Serial.print(humedad, 1);
+  Serial.print(" % | Luz: "); Serial.print(valorLuminosidad);
+  Serial.print(" | Aire: ");
+  if (!mq2Listo) {
+    Serial.print("calentando (");
+    Serial.print((ahora < MQ2_PRECALENTAMIENTO) ? (MQ2_PRECALENTAMIENTO - ahora) / 1000 : 0);
+    Serial.print(" s) raw=");
+    Serial.println(mq2Valor);
+  } else {
+    Serial.print(mq2Valor);
+    Serial.print(" (base ");
+    Serial.print(mq2Base);
+    Serial.print(") ");
+    Serial.println(textoAire[estadoAire]);
+  }
+}
+
+// ==========================================
+// 9. SETUP
+// ==========================================
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  // IDs unicos: en un broker publico, dos clientes con el mismo ID se expulsan entre si
+  String mac = String((uint32_t)ESP.getEfuseMac(), HEX);
+  clientId   = "ESP32_" + String(GRUPO) + "_" + mac;
+  clientIdIO = "ESP32_AIO_" + mac;
+
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARILLO, OUTPUT);
+  pinMode(LED_BLANCO, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  digitalWrite(LED_ROJO, LOW);
+  digitalWrite(LED_VERDE, LOW);
+  digitalWrite(LED_AMARILLO, LOW);
+  digitalWrite(LED_BLANCO, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  dht.begin();
+
+  conectarWiFi();
+
+  client.setServer(mqtt_server, mqtt_port);
+  client.setKeepAlive(30);
+
+  // TLS hacia Adafruit IO: cifra el trafico (y tu AIO Key) pero NO valida el certificado.
+  // Para validarlo, reemplaza setInsecure() por espClientIO.setCACert(<certificado raiz>).
+  espClientIO.setInsecure();
+  construirTopicsAIO();
+  clientIO.setServer(aio_server, aio_port);
+  clientIO.setKeepAlive(30);
+
+  if (WiFi.status() == WL_CONNECTED) {
+    reconectarMQTT();
+    if (USAR_ADAFRUIT_IO) reconectarAIO();
+  }
+
+  // Primera lectura para no arrancar con valores en cero
+  delay(1000);
+  leerSensores();
+  tiempoAnteriorDHT = millis();
+
+  Serial.println("Sistema Iniciado. Temporizadores, Histeresis, WiFi, MQTT y Adafruit IO activos.");
+}
+
+// ==========================================
+// 10. LOOP
+// ==========================================
+void loop() {
+  unsigned long tiempoActual = millis();
+
+  // --- Reconexion WiFi cada 10 s ---
+  if ((WiFi.status() != WL_CONNECTED) && (tiempoActual - tiempoAnteriorWiFi >= 10000)) {
+    Serial.println("\n[ALERTA] Conexion WiFi perdida. Intentando reconectar...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    tiempoAnteriorWiFi = tiempoActual;
+  }
+
+  // --- Mantener sesiones MQTT (reintento con millis, sin delay) ---
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!client.connected()) {
+      if (tiempoActual - tiempoAnteriorMQTT >= 5000) {
+        tiempoAnteriorMQTT = tiempoActual;
+        reconectarMQTT();
+      }
+    } else {
+      client.loop();
+    }
+
+    if (USAR_ADAFRUIT_IO) {
+      if (!clientIO.connected()) {
+        if (tiempoActual - tiempoAnteriorAIO >= 10000) {
+          tiempoAnteriorAIO = tiempoActual;
+          reconectarAIO();
+        }
+      } else {
+        clientIO.loop();
+      }
+    }
+  }
+
+  // --- Lectura de sensores cada 2 s ---
+  if (tiempoActual - tiempoAnteriorDHT >= 2000) {
+    tiempoAnteriorDHT = tiempoActual;
+    leerSensores();
+  }
+
+  // --- Publicacion periodica ---
+  if (client.connected() && datosValidos && (tiempoActual - ultimoEnvio >= INTERVALO_ENVIO)) {
+    ultimoEnvio = tiempoActual;
+    publicarDatos();
+  }
+  if (USAR_ADAFRUIT_IO && clientIO.connected() && datosValidos &&
+      (tiempoActual - ultimoEnvioAIO >= INTERVALO_ENVIO_AIO)) {
+    ultimoEnvioAIO = tiempoActual;
+    publicarAIO();
+  }
+
+  // ==========================================
+  // LOGICA DE CONTROL LOCAL (histeresis)
+  // ==========================================
+
+  // Ventilacion por temperatura: ON > 28 C, OFF <= 26 C
+  if (temperatura > 28.0) {
+    ventTemp = true;
+  } else if (temperatura <= 26.0) {
+    ventTemp = false;
+  }
+  // LED rojo = ventilacion (temperatura alta o aire malo)
+  ventilacionActiva = ventTemp || aireMala;
+  digitalWrite(LED_ROJO, ventilacionActiva ? HIGH : LOW);
+
+  // LED verde = ambiente OK (sin ventilacion, humedad 40-75 % y aire buena/calentando)
+  if (!ventilacionActiva && humedad >= 40.0 && humedad <= 75.0 && estadoAire <= 1) {
+    digitalWrite(LED_VERDE, HIGH);
+  } else {
+    digitalWrite(LED_VERDE, LOW);
+  }
+
+  // LED blanco = poca luz (LDR < 1000)
+  digitalWrite(LED_BLANCO, valorLuminosidad < 1000 ? HIGH : LOW);
+
+  // LED amarillo: parpadea (300 ms) si hum > 75 %, fijo si hum < 40 %
+  if (humedad > 75.0) {
+    if (tiempoActual - tiempoAnteriorAmarillo >= 300) {
+      tiempoAnteriorAmarillo = tiempoActual;
+      estadoAmarillo = !estadoAmarillo;
+      digitalWrite(LED_AMARILLO, estadoAmarillo);
+    }
+  } else if (humedad < 40.0) {
+    digitalWrite(LED_AMARILLO, HIGH);
+  } else {
+    digitalWrite(LED_AMARILLO, LOW);
+  }
+
+  // Buzzer: rapido (200 ms) si temp > 32; lento (500 ms) si aire malo;
+  //         fijo si temp > 28 o hum < 40; apagado en caso contrario
+  unsigned long intervaloBuzzer = 0;
+  if (temperatura > 32.0)  intervaloBuzzer = 200;
+  else if (aireMala)       intervaloBuzzer = 500;
+
+  if (intervaloBuzzer > 0) {
+    if (tiempoActual - tiempoAnteriorBuzzer >= intervaloBuzzer) {
+      tiempoAnteriorBuzzer = tiempoActual;
+      estadoBuzzer = !estadoBuzzer;
+      digitalWrite(BUZZER_PIN, estadoBuzzer);
+    }
+  } else if (temperatura > 28.0 || humedad < 40.0) {
+    digitalWrite(BUZZER_PIN, HIGH);
+  } else {
+    digitalWrite(BUZZER_PIN, LOW);
+  }
+  alarmaActiva = (temperatura > 28.0 || humedad < 40.0 || aireMala);
+
+  // --- Alerta actual (texto) ---
+  alertaActual = calcularAlerta();
+
+  // --- Reportar cambios de actuadores y alertas ---
+  if (datosValidos) {
+    if (client.connected()) publicarActuadores();
+    publicarAlerta();
+  }
+}
