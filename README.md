@@ -49,3 +49,9 @@
 * **Código Documentado en txt:** [Ver el Código en Formato txt](txt/Semana_Ocho_Txt_Romero_Santos.txt)
   
 ---
+
+### 🔹 Semana 11: Conexión a HiveMQ e Implementación del Sensor MQ-2 (Parcial)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Once_Informe_Romero_Santos.docx)
+* **Código Documentado en txt:** [Ver el Código en Formato txt](txt/Semana_Once_Txt_Romero_Santos.txt)
+
+---
