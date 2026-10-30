@@ -59,9 +59,15 @@ Tópicos MQTT usados: `ds/<datastream>` (publicar) y `downlink/ds/<datastream>` 
 La conexión usa TLS (puerto 8883) con `setInsecure()`, es decir, cifra el tráfico pero no valida el
 certificado del servidor; es suficiente para la práctica, no para producción.
 
-## Informe de la Semanana 12 con Capturas del dashborad
+## Capturas del dashboard
 
-> Ver Informe de la Semana 12:
+- Dashboard web: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Captura_Dashboard_Web.png)
+- Dashboard móvil: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Captura_Monitor.png)
+- Monitor Serial recibiendo comandos: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Captura_Monitor.png)
+
+## Informe de la Semanana 12
+
+> Ver Informe de la Semana 12: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Informe_Romero_Santos.docx)
 
 ## Video de demostración
 
