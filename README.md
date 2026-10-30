@@ -55,3 +55,8 @@
 * **Código Documentado en txt:** [Ver el Código en Formato txt](txt/Semana_Once_Txt_Romero_Santos.txt)
 
 ---
+
+### 🔹 Semana 12: Plataformas IoT en la Nube: Monitor de Aula Conectado con Blynk
+* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Doce](Semana_Doce_Documentacion_Romero_Santos)
+
+---
