@@ -61,15 +61,15 @@ certificado del servidor; es suficiente para la práctica, no para producción.
 
 ## Capturas del dashboard
 
-- Dashboard web: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Captura_Dashboard_Web.png)
-- Dashboard móvil: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Captura_Monitor.png)
-- Monitor Serial recibiendo comandos: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Captura_Monitor.png)
+- Dashboard web: ![Dashboard web](Semana_Doce_Captura_Dashboard_Web.png)
+- Dashboard móvil: ![Dashboard móvil](Semana_Doce_Captura_Dashboard_Móvil.png)
+- Monitor Serial recibiendo comandos: ![Monitor Serial](Semana_Doce_Captura_Monitor.png)
 
-## Informe de la Semanana 12
+## Informe de la Semana 12
 
-> Ver Informe de la Semana 12: (Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Informe_Romero_Santos.docx)
+> [Ver Informe de la Semana 12](Semana_Doce_Informe_Romero_Santos.docx)
 
 ## Video de demostración
 
-> Enlace al video: https://youtu.be/kxVUArSmjg0
+> [Enlace al video:](https://youtu.be/kxVUArSmjg0).
 
