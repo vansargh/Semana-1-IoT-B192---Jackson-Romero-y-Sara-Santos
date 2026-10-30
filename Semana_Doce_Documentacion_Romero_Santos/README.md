@@ -61,7 +61,7 @@ certificado del servidor; es suficiente para la práctica, no para producción.
 
 ## Informe de la Semanana 12 con Capturas del dashborad
 
-> Enlace al video:
+> Ver Informe de la Semana 12:
 
 ## Video de demostración
 
