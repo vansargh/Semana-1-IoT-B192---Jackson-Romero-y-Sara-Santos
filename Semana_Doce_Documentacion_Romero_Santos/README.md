@@ -67,9 +67,9 @@ certificado del servidor; es suficiente para la práctica, no para producción.
 
 ## Informe de la Semana 12
 
-** Informe en Word:** [Ver Informe de la Entrega](Semana_Doce_Informe_Romero_Santos)
+* **Informe en Word:** [Ver Informe de la Entrega](Semana_Doce_Documentacion_Romero_Santos/Semana_Doce_Informe_Romero_Santos.docx)
 
 ## Video de demostración
 
-** Link al Video:** [Ver Video en Youtube](https://youtu.be/kxVUArSmjg0)
+* **Link al Video:** [Ver Video en Youtube](https://youtu.be/kxVUArSmjg0)
 
