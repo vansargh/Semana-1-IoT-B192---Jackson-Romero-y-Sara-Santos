@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/34465514/README.md)
 # Semana 13: Alerta de luminosidad en el aula (ESP32 + Adafruit IO + IFTTT)
 
 Proyecto integrador de **Internet de las Cosas (UTS)**, grupo B192.
@@ -126,7 +125,7 @@ proyecto-iot-semana13/
 │   ├── dashboard_adafruit.png
 │   ├── flujo_semana13.png
 │   └── conexion_ldr_esp32.png
-└── informe_tecnico.md
+└── informe_tecnico.docx
 ```
 
 ## Seguridad de credenciales
