@@ -62,6 +62,6 @@
 ---
 
 ### 🔹 Semana 13: Automatización con IFTTT: Alerta de Luminosidad en el Aula
-* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Doce](proyecto-iot-semana13)
+* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Trece](proyecto-iot-semana13)
 
 ---
