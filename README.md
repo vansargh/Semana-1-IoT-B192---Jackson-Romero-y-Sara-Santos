@@ -60,3 +60,8 @@
 * **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Doce](Semana_Doce_Documentacion_Romero_Santos)
 
 ---
+
+### 🔹 Semana 13: Automatización con IFTTT: Alerta de Luminosidad en el Aula
+* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Doce](proyecto-iot-semana13)
+
+---
