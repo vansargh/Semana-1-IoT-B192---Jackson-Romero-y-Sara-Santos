@@ -67,6 +67,7 @@
 ---
 
 ### 🔹 Semana 16: Sistema IoT de Monitoreo Ambiental y Alertas Tempranas Para Aulas de CLase Basado en ESP32 (Parcial)
-* **Informe en Word:** [Ver Informe de la Entrega](docs/Semana_Dieciseis_Informe_Romero_Santos.docx)
+* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Trece](Semana_Dieciseis_Proyecto_Romero_Santos)
+* **Informe en Word:** [Ver Informe de la Entrega](Semana_Dieciseis_Proyecto_Romero_Santos/docs/capturas/Semana_Dieciseis_Informe_Romero_Santos.docx).
 
 ---
