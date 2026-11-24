@@ -1,0 +1,5 @@
+[2026-11-24 02:27:47] ALERTA aula=aula1 actual=38.9 C > umbral=30.4 C (media=27.6, desv=1.40, k=2)
+[2026-11-24 02:53:47] ALERTA aula=aula1 actual=38.9 C > umbral=30.3 C (media=27.6, desv=1.35, k=2)
+[2026-11-24 02:59:30] ALERTA aula=aula1 actual=38.9 C > umbral=30.7 C (media=27.7, desv=1.50, k=2)
+[2026-11-24 03:01:12] ALERTA aula=aula1 actual=38.9 C > umbral=30.7 C (media=27.7, desv=1.50, k=2)
+[2026-11-24 03:01:51] ALERTA aula=aula1 actual=38.9 C > umbral=30.6 C (media=27.7, desv=1.50, k=2)
