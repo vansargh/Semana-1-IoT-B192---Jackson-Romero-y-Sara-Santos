@@ -70,4 +70,4 @@ El proyecto tiene un solo ESP32 (aula1). La segunda aula y el histórico de la s
 
 ## Informe de la entrega
 
-* **Informe en Word:** [Ver Informe de la Entrega](Semana_Dieciseis_Proyecto_Romero_Santos/docs/capturas/Semana_Dieciseis_Informe_Romero_Santos.docx)
+* **Informe en Word:** [Ver Informe de la Entrega](docs/capturas/Semana_Dieciseis_Informe_Romero_Santos.docx)
