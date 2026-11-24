@@ -67,3 +67,7 @@ El proyecto tiene un solo ESP32 (aula1). La segunda aula y el histórico de la s
 ## Seguridad de credenciales
 
 `config.h`, `config.py` y `.env` están en `.gitignore` y **no se suben**. Solo se versionan las plantillas `*.example.*`.
+
+## Informe de la entrega
+
+* **Informe en Word:** [Ver Informe de la Entrega](Semana_Dieciseis_Proyecto_Romero_Santos/docs/capturas/Semana_Dieciseis_Informe_Romero_Santos.docx)
