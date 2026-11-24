@@ -62,12 +62,12 @@
 ---
 
 ### 🔹 Semana 13: Automatización con IFTTT: Alerta de Luminosidad en el Aula
-* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Trece](proyecto-iot-semana13
+* **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Trece](proyecto-iot-semana13)
 
 ---
 
 ### 🔹 Semana 16: Sistema IoT de Monitoreo Ambiental y Alertas Tempranas Para Aulas de CLase Basado en ESP32 (Parcial)
 * **Link a la Carpeta del Archivo:** [Ver Subcarpeta de la Semana Dieciséis](Semana_Dieciseis_Proyecto_Romero_Santos)
-* **Informe en Word:** [Ver Informe de la Entrega](Semana_Dieciseis_Proyecto_Romero_Santos/docs/capturas/Semana_Dieciseis_Informe_Romero_Santos.docx).
+* **Informe en Word:** [Ver Informe de la Entrega](Semana_Dieciseis_Proyecto_Romero_Santos/docs/capturas/Semana_Dieciseis_Informe_Romero_Santos.docx)
 
 ---
